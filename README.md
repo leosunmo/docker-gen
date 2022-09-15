@@ -57,9 +57,10 @@ The Dockerhub token is only required if you want to push the image to Dockerhub,
 The Github token is required in the Docker Tags step as it uses the Github API to get the latest metadata it seems. Can't really get around it in a nice way.
 
 ## TODO
+- [X] Add built-in Dockerfile validation.
+
 - [ ] Convert to Github Action. If this was to be used by multiple projects, writing a Typescript Github Action would be the way to go.
 - [ ] Make it a library + `cmd` CLI. Having it all in the `cmd` dir isn't very neat or flexible.
-- [ ] Add built-in Dockerfile validation.
 - [ ] Add more flexible options in the template renderer. Right now the values are hardcoded, 
       so we'd need to make it more flexible.
 - [ ] CI tidy up. A lot of hardcoded values.
