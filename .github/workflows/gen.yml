@@ -18,6 +18,8 @@ jobs:
       -
         name: Docker gen meta
         id: meta-gen
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: docker/metadata-action@v4
         with:
           images: |
@@ -55,6 +57,8 @@ jobs:
         name: Hello meta
         id: meta-hello
         uses: docker/metadata-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           images: |
             leosunmo/hello
