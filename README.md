@@ -49,8 +49,17 @@ To test the CI locally, install [act](https://github.com/nektos/act) and run the
 
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:act-latest \
-    -s DOCKERHUB_USERNAME=my-username \
+    -s GITHUB_TOKEN='my-github-token' \
     -s DOCKERHUB_TOKEN='my-secret-token'
 ```
 
-Or simply comment out the `Login to DockerHub` step when testing locally.
+The Dockerhub token is only required if you want to push the image to Dockerhub, you could simply comment out the `Login to DockerHub` step when testing locally.
+The Github token is required in the Docker Tags step as it uses the Github API to get the latest metadata it seems. Can't really get around it in a nice way.
+
+## TODO
+- [ ] Convert to Github Action. If this was to be used by multiple projects, writing a Typescript Github Action would be the way to go.
+- [ ] Make it a library + `cmd` CLI. Having it all in the `cmd` dir isn't very neat or flexible.
+- [ ] Add built-in Dockerfile validation.
+- [ ] Add more flexible options in the template renderer. Right now the values are hardcoded, 
+      so we'd need to make it more flexible.
+- [ ] CI tidy up. A lot of hardcoded values.
