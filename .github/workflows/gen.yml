@@ -87,4 +87,4 @@ jobs:
         name: Push to DockerHub
         run: |
           echo "Pushing to DockerHub"
-          docker push ${{ env.DOCKERHUB_USERNAME }}/hello
+          docker push --all-tags ${{ env.DOCKERHUB_USERNAME }}/hello
