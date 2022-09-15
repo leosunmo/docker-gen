@@ -38,7 +38,7 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
+        name: Build and push gen
         uses: docker/build-push-action@v3
         with:
           file: ./gen.Dockerfile
@@ -47,6 +47,7 @@ jobs:
              GEN_VERSION='${{ github.ref_name }}'
              GIT_COMMIT='${{ github.sha }}'
           push: false # No need to push here, but we would in prod.
+          load: true
           tags: ${{ steps.meta-gen.outputs.tags }}
       -
         name: Run docker-gen
@@ -70,7 +71,7 @@ jobs:
             type=ref,event=pr
             type=sha
       -
-        name: Build and push
+        name: Build and push hello
         uses: docker/build-push-action@v3
         with:
           file: applications/hello/Dockerfile
