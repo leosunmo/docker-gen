@@ -1,0 +1,4 @@
+appName: hello
+appVersion: 0.1.0
+builderImage: 'golang:1.19.1-alpine3.16'
+runtimeImage: 'gcr.io/distroless/static:latest'
