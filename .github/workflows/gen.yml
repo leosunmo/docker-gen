@@ -23,7 +23,8 @@ jobs:
           images: |
             leosunmo/docker-gen
           tags: |
-            type=ref
+            type=ref,event=branch
+            type=ref,event=pull_request
             type=sha
       -
         name: Login to DockerHub
@@ -58,7 +59,8 @@ jobs:
           images: |
             leosunmo/hello
           tags: |
-            type=ref
+            type=ref,event=branch
+            type=ref,event=pull_request
             type=sha
       -
         name: Build and push
