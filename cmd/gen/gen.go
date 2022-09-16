@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -106,15 +107,20 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if dataFile == "" {
-		return errors.New("data-file is required")
+	// Grab stdin to check if we have data
+	fi, _ := os.Stdin.Stat()
+
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		dataFile = os.Stdin.Name()
+	} else if dataFile == "" {
+		return errors.New("data-file is required, or data must be piped through stdin")
 	}
 
 	outputDir, err := cmd.Flags().GetString("output-dir")
 	if err != nil {
 		return err
 	}
-	if outputDir == "" {
+	if outputDir == "" && dataFile != os.Stdin.Name() {
 		outputDir = filepath.Dir(dataFile)
 	}
 
@@ -134,10 +140,15 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read template(s), %w", err)
 	}
 
-	data, err := os.ReadFile(dataFile)
+	f, err := os.Open(dataFile)
+	if err != nil {
+		return fmt.Errorf("failed to open data file, %w", err)
+	}
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return fmt.Errorf("failed to read data file, %w", err)
 	}
+
 	var values DockerfileValues
 	err = yaml.Unmarshal(data, &values)
 	if err != nil {
@@ -182,7 +193,7 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if stdout {
+	if outputDir == "" || stdout {
 		fmt.Println(b.String())
 		return nil
 	}
