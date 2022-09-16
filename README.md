@@ -57,6 +57,24 @@ bin/docker-gen run -d applications/hello/hello-values.yaml -t templates base
 ```
 
 This will be default output the final Dockerfile next to the values, in this case `applications/hello/Dockerfile`.
+To output the Dockerfile to a different directory, use the `-o` flag.
+
+### stdin/stdout
+
+You can also pipe the output to another command, for example to build the image:
+
+```bash
+bin/docker-gen run -d applications/hello/hello-values.yaml -t templates base | docker build -t hello -f - applications/hello
+```
+
+Here we get the Dockerfile from `stdin` (`-f -`).
+We set the `context` (the last input) to `applications/hello` since we use `COPY` commands in the Dockerfile, so we need the correct context.
+
+We can also pipe in the values from `stdin`, pipe the output to `stdout`, _and_ print the final Dockerfile to the `my-dockerfiles/` output directory:
+
+```bash
+cat applications/hello/hello-values.yaml | bin/docker-gen run -t templates -o my-dockerfiles/ base | docker build -t hello -f - applications/hello
+```
 
 ## CI
 
@@ -74,6 +92,7 @@ The Github token is required in the Docker Tags step as it uses the Github API t
 ## TODO
 
 - [X] Add built-in Dockerfile validation.
+- [X] Add support for stdin/stdout.
 
 - [ ] Convert to Github Action. If this was to be used by multiple projects, writing a Typescript Github Action would be the way to go.
 - [ ] Make it a library + `cmd` CLI. Having it all in the `cmd` dir isn't very neat or flexible.
