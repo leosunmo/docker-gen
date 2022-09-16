@@ -16,7 +16,7 @@ This will put the binary in the `bin` directory.
 
 Full usage information is available by running `docker-gen --help`.
 
-```bash
+```text
 docker-gen generates validated Dockerfiles from go templated Dockerfiles.
 
 Usage:
@@ -31,6 +31,21 @@ Available Commands:
 
 Flags:
   -h, --help   help for docker-gen
+```
+
+For the `run` command, the following options are available:
+
+```text
+Usage:
+  docker-gen run [flags]
+
+Flags:
+  -d, --data-file string      File containing data to use in template
+  -f, --force                 Print rendered Dockerfiles even if they don't pass validation
+  -h, --help                  help for run
+  -o, --output-dir string     Directory to write rendered Dockerfiles to. Defaults to data directory if not piped to something else.
+  -s, --stdout                Write rendered Dockerfiles to stdout
+  -t, --template-dir string   Directory containing templates
 ```
 
 ## Examples
@@ -57,10 +72,11 @@ The Dockerhub token is only required if you want to push the image to Dockerhub,
 The Github token is required in the Docker Tags step as it uses the Github API to get the latest metadata it seems. Can't really get around it in a nice way.
 
 ## TODO
+
 - [X] Add built-in Dockerfile validation.
 
 - [ ] Convert to Github Action. If this was to be used by multiple projects, writing a Typescript Github Action would be the way to go.
 - [ ] Make it a library + `cmd` CLI. Having it all in the `cmd` dir isn't very neat or flexible.
-- [ ] Add more flexible options in the template renderer. Right now the values are hardcoded, 
+- [ ] Add more flexible options in the template renderer. Right now the values are hardcoded,
       so we'd need to make it more flexible.
 - [ ] CI tidy up. A lot of hardcoded values.

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -78,8 +79,8 @@ func main() {
 
 	runCmd.PersistentFlags().StringP("template-dir", "t", "", "Directory containing templates")
 	runCmd.PersistentFlags().StringP("data-file", "d", "", "File containing data to use in template")
-	runCmd.PersistentFlags().StringP("output-dir", "o", "", "Directory to write rendered Dockerfiles to. Defaults to data directory")
-	runCmd.PersistentFlags().BoolP("stdout", "s", false, "Write rendered Dockerfiles to stdout instead of files")
+	runCmd.PersistentFlags().StringP("output-dir", "o", "", "Directory to write rendered Dockerfiles to. Defaults to data directory if not piped to something else.")
+	runCmd.PersistentFlags().BoolP("stdout", "s", false, "Write rendered Dockerfiles to stdout")
 	runCmd.PersistentFlags().BoolP("force", "f", false, "Print rendered Dockerfiles even if they don't pass validation")
 
 	runCmd.MarkFlagRequired("template-dir")
@@ -106,21 +107,41 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if dataFile == "" {
-		return errors.New("data-file is required")
+	// Grab stdin to check if we are piping in the values
+	fi, _ := os.Stdin.Stat()
+
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		dataFile = os.Stdin.Name()
+	} else if dataFile == "" {
+		return errors.New("data-file is required, or data must be piped through stdin")
+	}
+
+	stdout, err := cmd.Flags().GetBool("stdout")
+	if err != nil {
+		return err
+	}
+
+	// Grab stdout to check if are piping out to something
+	fo, _ := os.Stdout.Stat()
+	var pipedOut bool
+	if (fo.Mode() & os.ModeCharDevice) == 0 {
+		pipedOut = true
 	}
 
 	outputDir, err := cmd.Flags().GetString("output-dir")
 	if err != nil {
 		return err
 	}
-	if outputDir == "" {
+
+	// If an output dir wasn't provided and the data isn't coming from stdin, AND we're not piping it out, use the data file's directory.
+	if outputDir == "" && dataFile != os.Stdin.Name() && !pipedOut {
 		outputDir = filepath.Dir(dataFile)
 	}
 
-	stdout, err := cmd.Flags().GetBool("stdout")
-	if err != nil {
-		return err
+	// If an output dir wasn't provided, and there's no datafile (because we got it from stdin) AND we're not piping to stdout
+	// then we return an error.
+	if outputDir == "" && (dataFile == os.Stdin.Name() || dataFile == "") && (!stdout && !pipedOut) {
+		return errors.New("output-dir is required if data is piped in and it's not piped out")
 	}
 
 	force, err := cmd.Flags().GetBool("force")
@@ -134,10 +155,15 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read template(s), %w", err)
 	}
 
-	data, err := os.ReadFile(dataFile)
+	f, err := os.Open(dataFile)
+	if err != nil {
+		return fmt.Errorf("failed to open data file, %w", err)
+	}
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return fmt.Errorf("failed to read data file, %w", err)
 	}
+
 	var values DockerfileValues
 	err = yaml.Unmarshal(data, &values)
 	if err != nil {
@@ -182,11 +208,15 @@ func renderTemplate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if stdout {
-		fmt.Println(b.String())
-		return nil
+	if outputDir != "" {
+		err := os.WriteFile(filepath.Join(outputDir, "Dockerfile"), b.Bytes(), 0644)
+		if err != nil {
+			return fmt.Errorf("failed to write Dockerfile, %w", err)
+		}
 	}
-	os.WriteFile(filepath.Join(outputDir, "Dockerfile"), b.Bytes(), 0644)
+	if stdout || pipedOut {
+		fmt.Println(b.String())
+	}
 	return nil
 }
 
